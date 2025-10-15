@@ -20,201 +20,168 @@
   button{background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:10px;cursor:pointer}
   button.ghost{background:transparent;border:1px solid rgba(79,70,229,0.12);color:var(--accent)}
   .small{font-size:13px;color:var(--muted)}
-  .preview{max-height:360px;overflow:auto;border-radius:8px;padding:8px;border:1px dashed #eef2ff;background:#fbfbff;margin-top:8px}
+  .preview{max-height:420px;overflow:auto;border-radius:8px;padding:8px;border:1px dashed #eef2ff;background:#fbfbff;margin-top:8px}
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{padding:8px;border-bottom:1px solid #f1f3f8;text-align:left}
   th{background:#f9fbff;font-weight:700}
   .hint{background:#fff7ff;border-left:4px solid #ffd26a;padding:8px;border-radius:8px;margin-top:8px}
   .footer{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
+  .download-area{text-align:center;margin-top:12px}
   @media(max-width:560px){.controls{flex-direction:column} input[type=text]{width:100%}}
 </style>
 
-<!-- XLSX (SheetJS) -->
+<!-- Bibliotecas -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
 </script>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <div class="logo">FB</div>
-      <div>
-        <h1>Filtro de Agências e Bancos 🌟</h1>
-        <div class="byline">Por <b>visionario77 🌟</b> — tudo processado localmente, sem internet.</div>
-      </div>
-    </header>
-
-    <div class="card">
-      <label>1) Escolha o arquivo (PDF ou Excel .xlsx)</label>
-      <input id="fileInput" type="file" accept=".pdf,.xlsx,.xls" />
-      <div class="small" style="margin-top:6px">Exemplo: seu arquivo com colunas como CPF, Nome, Banco Recebe, Agencia, Conta, Telefone, Renda...</div>
-      <div class="hint">Dica: se tiver Excel, funciona bem; se for PDF, o sistema detecta automaticamente (usa CPF como corte).</div>
+<div class="wrap">
+  <header>
+    <div class="logo">FB</div>
+    <div>
+      <h1>Filtro de Agências e Bancos 🌟</h1>
+      <div class="byline">por <b>visionario77 🌟</b> — rápido, privado e 100% offline</div>
     </div>
+  </header>
 
-    <div class="card">
-      <label>2) Coloque os filtros</label>
-      <div class="controls">
-        <input id="agenciaInput" type="text" placeholder="Agência (ex.: 3118)" />
-        <input id="bancoInput" type="text" placeholder="Banco (ex.: 756 ou Caixa)" />
-        <button id="filterBtn">Filtrar</button>
-        <button id="exportBtn" class="ghost">Baixar CSV</button>
-      </div>
-      <div class="small" style="margin-top:8px">Preencha apenas um campo (Agência ou Banco) ou ambos.</div>
-    </div>
+  <div class="card">
+    <label>1) Escolha o arquivo (Excel .xlsx / .xls ou PDF)</label>
+    <input id="fileInput" type="file" accept=".pdf,.xlsx,.xls"/>
+    <div class="small">O sistema detecta automaticamente as colunas. Exemplo: CPF, Nome, Banco, Agência, Conta, Renda...</div>
+  </div>
 
-    <div class="card">
-      <label>3) Resultado</label>
-      <div id="status" class="small">Nenhum arquivo carregado.</div>
-      <div id="preview" class="preview"><div class="small">Os resultados aparecerão aqui.</div></div>
-    </div>
-
-    <div class="card">
-      <label>Como usar</label>
-      <ol class="small">
-        <li>Escolha o arquivo PDF ou Excel.</li>
-        <li>Digite a Agência e/ou Banco desejado.</li>
-        <li>Clique em <b>Filtrar</b>.</li>
-        <li>Baixe o resultado completo clicando em <b>Baixar CSV</b>.</li>
-      </ol>
-      <div class="footer">© visionario77 🌟 — Privado, rápido e 100% offline.</div>
+  <div class="card">
+    <label>2) Digite os filtros</label>
+    <div class="controls">
+      <input id="agenciaInput" type="text" placeholder="Agência (ex.: 3118)">
+      <input id="bancoInput" type="text" placeholder="Banco (ex.: 756 ou Caixa)">
+      <button id="filterBtn">Filtrar</button>
     </div>
   </div>
+
+  <div class="card">
+    <label>3) Resultado</label>
+    <div id="status" class="small">Nenhum arquivo carregado.</div>
+    <div id="preview" class="preview"><div class="small">Os resultados aparecerão aqui.</div></div>
+    <div id="downloadArea" class="download-area"></div>
+  </div>
+
+  <div class="card">
+    <label>Como usar</label>
+    <ol class="small">
+      <li>Escolha o arquivo PDF ou Excel.</li>
+      <li>Digite a Agência e/ou Banco que deseja filtrar.</li>
+      <li>Clique em <b>Filtrar</b>.</li>
+      <li>Veja o resultado organizado e baixe se quiser.</li>
+    </ol>
+    <div class="footer">© 2025 visionario77 🌟 — uso livre e permanente.</div>
+  </div>
+</div>
 
 <script>
 const fileInput = document.getElementById('fileInput');
 const agenciaInput = document.getElementById('agenciaInput');
 const bancoInput = document.getElementById('bancoInput');
 const filterBtn = document.getElementById('filterBtn');
-const exportBtn = document.getElementById('exportBtn');
 const preview = document.getElementById('preview');
 const status = document.getElementById('status');
+const downloadArea = document.getElementById('downloadArea');
 
 let rows = [];
 let headers = [];
 
 function setStatus(text){ status.textContent = text; }
-function showSmall(msg){ preview.innerHTML = '<div class="small">'+msg+'</div>'; }
+function showSmall(msg){ preview.innerHTML = '<div class="small">'+msg+'</div>'; downloadArea.innerHTML=''; }
 
 function renderTable(data){
-  if(!data || data.length===0){ showSmall('Nenhum registro.'); return; }
+  if(!data || data.length===0){ showSmall('Nenhum registro encontrado.'); return; }
   const keys = headers.length ? headers : Object.keys(data[0]);
   let html = '<table><thead><tr>' + keys.map(k=>`<th>${k}</th>`).join('') + '</tr></thead><tbody>';
   for(const r of data){
-    html += '<tr>' + keys.map(k=>`<td>${(r[k]!==undefined? r[k] : '')}</td>`).join('') + '</tr>';
+    html += '<tr>' + keys.map(k=>`<td>${r[k] ?? ''}</td>`).join('') + '</tr>';
   }
   html += '</tbody></table>';
   preview.innerHTML = html;
+  downloadArea.innerHTML = `<button id="exportBtn">📥 Baixar CSV (${data.length} linhas)</button>`;
+  document.getElementById('exportBtn').onclick = () => downloadCSV(data);
 }
 
-function downloadCSV(data, filename='resultado.csv'){
-  if(!data || data.length===0){ alert('Nada para baixar.'); return; }
+function downloadCSV(data){
   const keys = headers.length ? headers : Object.keys(data[0]);
   const csvRows = [keys.join(',')];
   for(const r of data){
-    const line = keys.map(k => {
-      const v = r[k]===undefined ? '' : String(r[k]).replace(/"/g,'""');
-      return `"${v}"`;
-    }).join(',');
+    const line = keys.map(k => `"${(r[k]??'').toString().replace(/"/g,'""')}"`).join(',');
     csvRows.push(line);
   }
   const blob = new Blob([csvRows.join('\n')], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  const a = document.createElement('a'); a.href = url; a.download = 'resultado.csv'; document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },1000);
 }
 
-exportBtn.addEventListener('click', ()=>{
-  if(!rows.length){ alert('Nada para exportar.'); return; }
-  downloadCSV(rows, 'filtro_resultado.csv');
-});
-
-// PDF extraction
 async function extractTextFromPDF(file){
   const arrayBuffer = await file.arrayBuffer();
-  const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
-  const pdf = await loadingTask.promise;
-  let fullText = '';
+  const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  let text = '';
   for(let p=1;p<=pdf.numPages;p++){
     const page = await pdf.getPage(p);
     const content = await page.getTextContent();
-    const strings = content.items.map(i=>i.str);
-    fullText += strings.join(' ') + '\n';
+    text += content.items.map(i=>i.str).join(' ') + '\n';
   }
-  return fullText;
+  return text;
 }
 
-// Excel parser
 function parseExcel(file){
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve,reject)=>{
     try{
       const data = await file.arrayBuffer();
-      const wb = XLSX.read(data, {type:'array'});
+      const wb = XLSX.read(data,{type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(ws, {defval:''});
+      const json = XLSX.utils.sheet_to_json(ws,{defval:''});
       resolve(json);
-    }catch(e){ reject('Erro ao ler o Excel: ' + e.message); }
+    }catch(e){reject('Erro ao ler Excel: '+e.message);}
   });
 }
 
-// Normalize Excel to ensure Banco/Agencia exist, preserve all fields
-function normalizeExcelRows(sheetRows){
-  const possibleBanco = ['Banco Recebe','Banco','BANCO','BancoRecebe'];
-  const possibleAg = ['Agencia','Agência','AGENCIA','Ag'];
-  const normalized = [];
-  for(const r of sheetRows){
-    const nr = {...r};
-    // detect Banco
-    const bancoKey = Object.keys(r).find(k=>possibleBanco.some(p=>k.toLowerCase().includes(p.toLowerCase())));
-    nr.Banco = bancoKey ? r[bancoKey] : (r.Banco||'');
-    // detect Agencia
-    const agKey = Object.keys(r).find(k=>possibleAg.some(p=>k.toLowerCase().includes(p.toLowerCase())));
-    nr.Agencia = agKey ? String(r[agKey]).replace(/\D/g,'') : (r.Agencia||'');
-    normalized.push(nr);
-  }
-  return normalized;
-}
-
-// Handle file input
 fileInput.addEventListener('change', async (ev)=>{
-  const f = ev.target.files && ev.target.files[0];
+  const f = ev.target.files[0];
   if(!f) return;
-  setStatus('Lendo arquivo... aguarde');
-  rows = []; headers = [];
-  showSmall('Processando...');
+  setStatus('Lendo arquivo...');
+  rows=[]; headers=[];
   try{
-    const name = (f.name||'').toLowerCase();
-    if(name.endsWith('.pdf')){
-      const text = await extractTextFromPDF(f);
-      rows = text.split(/\n+/).map(t=>({Texto:t.trim()})).filter(x=>x.Texto);
-      headers = ['Texto'];
-      setStatus(`${rows.length} linhas lidas do PDF.`);
-      renderTable(rows.slice(0,200));
-    } else if(name.endsWith('.xls') || name.endsWith('.xlsx')){
+    const name = f.name.toLowerCase();
+    if(name.endsWith('.xls')||name.endsWith('.xlsx')){
       const sheet = await parseExcel(f);
-      rows = normalizeExcelRows(sheet);
+      rows = sheet;
       headers = Object.keys(rows[0]||{});
-      setStatus(`${rows.length} linhas lidas do Excel.`);
+      setStatus(`${rows.length} linhas, ${headers.length} colunas carregadas.`);
       renderTable(rows.slice(0,200));
-    } else {
+    }else if(name.endsWith('.pdf')){
+      const text = await extractTextFromPDF(f);
+      const lines = text.split(/\n+/).filter(x=>x.trim());
+      rows = lines.map(t=>({Texto:t.trim()}));
+      headers = ['Texto'];
+      setStatus(`${rows.length} linhas detectadas no PDF.`);
+      renderTable(rows.slice(0,200));
+    }else{
       throw new Error('Tipo de arquivo não suportado.');
     }
-  }catch(err){
-    console.error(err);
-    setStatus('Erro: ' + err);
-    showSmall('Erro ao ler o arquivo. Tente outro.');
+  }catch(e){
+    console.error(e);
+    setStatus('Erro: '+e);
+    showSmall('Erro ao processar arquivo. Tente outro formato.');
   }
 });
 
-// Filter
-filterBtn.addEventListener('click', ()=>{
+filterBtn.addEventListener('click',()=>{
   const a = (agenciaInput.value||'').replace(/\D/g,'');
   const b = (bancoInput.value||'').trim().toLowerCase();
-  if(!a && !b){ alert('Coloque ao menos Agência ou Banco.'); return; }
-
+  if(!a && !b){ alert('Digite Agência e/ou Banco para filtrar.'); return; }
   const filtered = rows.filter(r=>{
     const ag = String(r.Agencia||r.agencia||'').replace(/\D/g,'');
     const bk = String(r.Banco||r.banco||'').toLowerCase();
@@ -222,13 +189,11 @@ filterBtn.addEventListener('click', ()=>{
     const okB = !b || bk.includes(b);
     return okA && okB;
   });
-
   setStatus(`${filtered.length} registros após filtro.`);
   renderTable(filtered);
-  rows = filtered; // mantém filtrado para exportar
 });
 
-setStatus('Pronto. Escolha o arquivo e siga as instruções acima.');
+setStatus('Pronto. Escolha um arquivo e siga as instruções.');
 </script>
 </body>
 </html>
