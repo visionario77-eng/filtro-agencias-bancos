@@ -1,373 +1,194 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Filtro de Agências e Bancos — visionario77 🌟</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Filtro de Agências e Bancos 🌟</title>
 <style>
-:root{--bg:#f4f6ff;--card:#fff;--accent:#5b21b6;--muted:#6b7280;font-family:Inter,system-ui,Roboto,Arial;}
-body{margin:0;background:linear-gradient(180deg,#fbfbff,#eef2ff);color:#111;padding:12px;}
-.wrap{max-width:980px;margin:0 auto;}
-header{display:flex;gap:12px;align-items:center}
-.logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;box-shadow:0 10px 30px rgba(79,70,229,0.12)}
-h1{font-size:18px;margin:0}
-.byline{font-size:13px;color:var(--muted);margin-top:2px}
-.card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.06);margin-top:12px}
-label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
-input[type=file]{width:100%}
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-input[type=text]{padding:10px;border-radius:10px;border:1px solid #e6e9ef;min-width:160px}
-button{background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:10px;cursor:pointer}
-button.ghost{background:transparent;border:1px solid rgba(79,70,229,0.12);color:var(--accent)}
-.small{font-size:13px;color:var(--muted)}
-.preview{max-height:520px;overflow:auto;border-radius:8px;padding:8px;border:1px dashed #eef2ff;background:#fbfbff;margin-top:8px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:8px;border-bottom:1px solid #f1f3f8;text-align:left}
-th{background:#f9fbff;font-weight:700;position:sticky;top:0;z-index:1}
-.hint{background:#fff7ff;border-left:4px solid #ffd26a;padding:8px;border-radius:8px;margin-top:8px}
-.footer{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
-.controls-right{margin-left:auto;display:flex;gap:8px;align-items:center}
-.download-area{text-align:center;margin-top:12px}
-.meta{font-size:13px;color:var(--muted);margin-top:6px}
-@media(max-width:640px){.controls{flex-direction:column}.controls-right{margin-left:0}}
+  :root{--bg:#f4f6ff;--card:#fff;--accent:#5b21b6;--muted:#6b7280;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
+  body{margin:0;background:linear-gradient(180deg,#fbfbff,#eef2ff);color:#111;padding:12px;}
+  .wrap{max-width:920px;margin:0 auto;}
+  header{display:flex;gap:12px;align-items:center}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;box-shadow:0 10px 30px rgba(79,70,229,0.12)}
+  h1{font-size:18px;margin:0}
+  .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.06);margin-top:12px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
+  input[type=file]{width:100%}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  input[type=text]{padding:10px;border-radius:10px;border:1px solid #e6e9ef;min-width:140px}
+  button{background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:10px;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid rgba(79,70,229,0.12);color:var(--accent)}
+  .small{font-size:13px;color:var(--muted)}
+  .preview{max-height:360px;overflow:auto;border-radius:8px;padding:8px;border:1px dashed #eef2ff;background:#fbfbff;margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px;border-bottom:1px solid #f1f3f8;text-align:left}
+  th{background:#f9fbff;font-weight:700}
+  .footer{font-size:13px;color:var(--muted);margin-top:8px}
+  @media(max-width:560px){.controls{flex-direction:column} input[type=text]{width:100%}}
 </style>
 
-<!-- SheetJS for Excel -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<!-- PDF.js for PDF parsing -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script>
-  // Ensure worker is set (necessary for PDF parsing)
-  if(window.pdfjsLib) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
-  }
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB3WguIMNSsviul93HmgzJ1uj4GJGswD20",
+    authDomain: "filtro-agencias-bancos.firebaseapp.com",
+    projectId: "filtro-agencias-bancos",
+    storageBucket: "filtro-agencias-bancos.firebasestorage.app",
+    messagingSenderId: "917546706513",
+    appId: "1:917546706513:web:1c476d7b7c86dbc978ba70"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const storage = getStorage(app);
+
+  window.uploadFileToFirebase = async function(file){
+    const fileRef = ref(storage, 'uploads/' + file.name);
+    await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(fileRef);
+    return url;
+  };
 </script>
+
+<!-- XLSX -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="logo">FB</div>
     <div>
-      <h1>Filtro de Agências e Bancos</h1>
-      <div class="byline">por <b>visionario77 🌟</b> — privado & offline (processamento local)</div>
+      <h1>Filtro de Agências e Bancos 🌟</h1>
+      <div class="small">Por visionario77 🌟 — tudo processado online, rápido e seguro.</div>
     </div>
   </header>
 
   <div class="card">
-    <label>1) Escolha o arquivo (Excel .xlsx / .xls ou PDF)</label>
-    <input id="fileInput" type="file" accept=".xlsx,.xls,.pdf" />
-    <div class="hint">O sistema tenta preservar todas as colunas do Excel. PDF: extração heurística (boa para PDFs com tabelas simples).</div>
-    <div id="fileMeta" class="meta"></div>
+    <label>1) Escolha o arquivo (PDF ou Excel .xlsx/.xls)</label>
+    <input id="fileInput" type="file" accept=".pdf,.xlsx,.xls" />
+    <div class="small">Exemplo: colunas como CPF, Nome, Banco Recebe, Agência, Conta, Renda, Telefone...</div>
   </div>
 
   <div class="card">
-    <label>2) Filtros (Agência exata é obrigatória para comparação exata)</label>
+    <label>2) Filtros</label>
     <div class="controls">
-      <input id="agenciaInput" type="text" placeholder="Agência (ex.: 3118) — comparação exata (só números)" />
-      <input id="bancoInput" type="text" placeholder="Banco (ex.: 756 ou Caixa) — preferência por igualdade" />
-      <div class="controls-right">
-        <button id="filterBtn">Filtrar</button>
-        <button id="resetBtn" class="ghost">Recarregar original</button>
-      </div>
+      <input id="agenciaInput" type="text" placeholder="Agência (ex.: 3118)" />
+      <input id="bancoInput" type="text" placeholder="Banco (ex.: 756 ou Caixa)" />
+      <button id="filterBtn">Filtrar</button>
+      <button id="exportBtn" class="ghost">Baixar CSV</button>
     </div>
-    <div class="small" style="margin-top:8px">Preencha Agência (números) para filtragem exata; o campo Banco será comparado por igualdade textual (ou por número, se você digitar apenas dígitos).</div>
   </div>
 
   <div class="card">
     <label>3) Resultado</label>
     <div id="status" class="small">Nenhum arquivo carregado.</div>
-    <div id="preview" class="preview"><div class="small">A tabela carregada aparecerá aqui.</div></div>
-    <div id="downloadArea" class="download-area"></div>
+    <div id="preview" class="preview"><div class="small">Os resultados aparecerão aqui.</div></div>
   </div>
 
-  <div class="card">
-    <label>Como usar</label>
-    <ol class="small">
-      <li>Escolha o arquivo Excel (.xlsx ou .xls) ou PDF.</li>
-      <li>Digite a Agência (números) e/ou Banco.</li>
-      <li>Clique em <b>Filtrar</b>. Veja os resultados organizados.</li>
-      <li>Clique em <b>📥 Baixar CSV</b> para salvar os resultados filtrados com todas as colunas.</li>
-    </ol>
-    <div class="footer">© 2025 visionario77 🌟</div>
-  </div>
+  <div class="footer small">© visionario77 🌟 — Privado, rápido e 100% online.</div>
 </div>
 
 <script>
-/* -----------------------------
-   Utilitários e variáveis
-   ----------------------------- */
-const fileInput = document.getElementById('fileInput');
-const agenciaInput = document.getElementById('agenciaInput');
-const bancoInput = document.getElementById('bancoInput');
-const filterBtn = document.getElementById('filterBtn');
-const resetBtn = document.getElementById('resetBtn');
-const preview = document.getElementById('preview');
-const status = document.getElementById('status');
-const downloadArea = document.getElementById('downloadArea');
-const fileMeta = document.getElementById('fileMeta');
+const fileInput=document.getElementById('fileInput');
+const agenciaInput=document.getElementById('agenciaInput');
+const bancoInput=document.getElementById('bancoInput');
+const filterBtn=document.getElementById('filterBtn');
+const exportBtn=document.getElementById('exportBtn');
+const preview=document.getElementById('preview');
+const status=document.getElementById('status');
+let rows=[],headers=[];
 
-let originalRows = []; // full dataset as array of objects
-let currentRows = [];  // filtered (displayed) rows
-let headers = [];      // list of columns (preserve original order)
-
-/* Normalize field key detection:
-   returns the value from row that matches a list of possible keys (case-insensitive) */
-function findValue(row, candidates){
-  const keys = Object.keys(row);
-  for(const c of candidates){
-    const found = keys.find(k => k && k.toString().toLowerCase().trim() === c.toLowerCase().trim());
-    if(found) return row[found];
-  }
-  // looser match: contains substring
-  for(const c of candidates){
-    const found = keys.find(k => k && k.toString().toLowerCase().includes(c.toLowerCase().trim()));
-    if(found) return row[found];
-  }
-  return undefined;
+function setStatus(t){status.textContent=t;}
+function showSmall(m){preview.innerHTML='<div class="small">'+m+'</div>';}
+function renderTable(data){
+  if(!data.length){showSmall('Nenhum registro.');return;}
+  const keys=headers.length?headers:Object.keys(data[0]);
+  let html='<table><thead><tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr></thead><tbody>';
+  data.forEach(r=>html+='<tr>'+keys.map(k=>`<td>${r[k]??''}</td>`).join('')+'</tr>');
+  preview.innerHTML=html+'</tbody></table>';
+}
+function downloadCSV(data){
+  if(!data.length){alert('Nada para baixar.');return;}
+  const keys=headers.length?headers:Object.keys(data[0]);
+  const csv=[keys.join(',')];
+  data.forEach(r=>csv.push(keys.map(k=>`"${String(r[k]??'').replace(/"/g,'""')}"`).join(',')));
+  const blob=new Blob([csv.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='resultado.csv';a.click();
+  URL.revokeObjectURL(a.href);
 }
 
-/* canonical keys we look for */
-const agenciaKeys = ['Agencia','Agência','AGENCIA','agencia','ag'];
-const bancoKeys = ['Banco','BANCO','banco','Banco Recebe','BancoRecebe','Banco_Recebe','BancoRecebedor'];
-
-/* set status and small message */
-function setStatus(msg){ status.textContent = msg; }
-
-/* render table preserving headers order */
-function renderTable(rowsToShow){
-  downloadArea.innerHTML = '';
-  if(!rowsToShow || rowsToShow.length === 0){
-    preview.innerHTML = '<div class="small">Nenhum registro para exibir.</div>';
-    return;
+async function extractTextFromPDF(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let text='';
+  for(let i=1;i<=pdf.numPages;i++){
+    const p=await pdf.getPage(i);
+    const c=await p.getTextContent();
+    text+=c.items.map(i=>i.str).join(' ')+'\n';
   }
-  // ensure headers exists
-  if(!headers || headers.length === 0){
-    headers = Object.keys(rowsToShow[0]);
-  }
-  // build HTML table
-  let html = '<table><thead><tr>';
-  for(const h of headers) html += `<th>${h}</th>`;
-  html += '</tr></thead><tbody>';
-  for(const r of rowsToShow){
-    html += '<tr>';
-    for(const h of headers){
-      // show original value or empty
-      let val = r[h];
-      if(val === undefined || val === null) val = '';
-      // escape HTML entities basic
-      const safe = String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      html += `<td>${safe}</td>`;
-    }
-    html += '</tr>';
-  }
-  html += '</tbody></table>';
-  preview.innerHTML = html;
-  // download button for this result set
-  const btn = document.createElement('button');
-  btn.id = 'downloadCsvBtn';
-  btn.textContent = `📥 Baixar CSV (${rowsToShow.length} linhas)`;
-  btn.style.marginTop = '8px';
-  btn.onclick = ()=> downloadCSV(rowsToShow);
-  downloadArea.appendChild(btn);
+  return text;
 }
 
-/* download CSV preserving headers order */
-function downloadCSV(rowsToExport){
-  if(!rowsToExport || rowsToExport.length===0){ alert('Nada para exportar.'); return; }
-  const keys = headers.length ? headers : Object.keys(rowsToExport[0]);
-  const csv = [keys.map(k=>escapeCsv(k)).join(',')];
-  for(const r of rowsToExport){
-    const line = keys.map(k=>escapeCsv(String(r[k] ?? ''))).join(',');
-    csv.push(line);
-  }
-  const blob = new Blob([csv.join('\n')], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'filtro_resultado.csv'; document.body.appendChild(a); a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },1000);
-}
-function escapeCsv(s){
-  return `"${s.replace(/"/g,'""')}"`;
-}
-
-/* -----------------------------
-   Excel parsing (SheetJS)
-   ----------------------------- */
-async function parseExcelFile(file){
-  const data = await file.arrayBuffer();
-  // read workbook (type array)
-  const wb = XLSX.read(data, {type:'array'});
-  const wsName = wb.SheetNames[0];
-  const ws = wb.Sheets[wsName];
-  // sheet_to_json will return an array of objects using header row
-  const json = XLSX.utils.sheet_to_json(ws, {defval:''});
-  return json;
-}
-
-/* -----------------------------
-   PDF parsing (basic heuristic)
-   ----------------------------- */
-async function parsePdfFile(file){
-  if(!window.pdfjsLib) throw new Error('pdfjs não carregado');
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-  let fullText = '';
-  for(let p=1;p<=pdf.numPages;p++){
-    const page = await pdf.getPage(p);
-    const content = await page.getTextContent();
-    fullText += content.items.map(i=>i.str).join(' ') + '\n';
-  }
-  // Try to detect header line (look for CPF or Nome or Agência)
-  const lines = fullText.split(/\n+/).map(l=>l.trim()).filter(Boolean);
-  // if a line looks like header (contains 'CPF' or 'Nome' or 'Agencia'), use it to split columns
-  const headerLineIndex = lines.findIndex(l => /cpf|nome|ag[eê]ncia|banco/i.test(l));
-  if(headerLineIndex >= 0){
-    const headerLine = lines[headerLineIndex];
-    // split headers by multiple spaces or tab
-    const detectedHeaders = headerLine.split(/\s{2,}|\t/).map(h=>h.trim()).filter(Boolean);
-    const dataLines = lines.slice(headerLineIndex+1);
-    const arr = dataLines.map(line=>{
-      const cols = line.split(/\s{2,}|\t/).map(c=>c.trim());
-      const obj = {};
-      for(let i=0;i<detectedHeaders.length;i++){
-        obj[detectedHeaders[i]] = cols[i] ?? '';
-      }
-      // keep raw text for safety
-      obj._orig = line;
-      return obj;
-    }).filter(o => Object.values(o).some(v => v && String(v).trim() !== ''));
-    if(arr.length) return {rows: arr, headers: detectedHeaders};
-  }
-  // fallback: return each non-empty line as single column 'Texto'
-  const fallback = lines.map(l => ({Texto: l}));
-  return {rows: fallback, headers: ['Texto']};
-}
-
-/* -----------------------------
-   File input handling
-   ----------------------------- */
-fileInput.addEventListener('change', async (ev)=>{
-  const f = ev.target.files && ev.target.files[0];
-  if(!f) return;
-  setStatus('Lendo arquivo...');
-  preview.innerHTML = '<div class="small">Processando...</div>';
-  originalRows = [];
-  currentRows = [];
-  headers = [];
-  fileMeta.textContent = '';
-  try{
-    const name = (f.name || '').toLowerCase();
-    if(name.endsWith('.xlsx') || name.endsWith('.xls')){
-      const sheet = await parseExcelFile(f);
-      // sheet is array of objects preserving headers
-      originalRows = sheet.map(r => normalizeRowPreserveAll(r));
-      headers = Object.keys(originalRows[0] || {});
-      currentRows = originalRows.slice();
-      setStatus(`${originalRows.length} linhas carregadas — ${headers.length} colunas.`);
-      fileMeta.textContent = `Arquivo: ${f.name}`;
-      renderTable(currentRows.slice(0, 500));
-    } else if(name.endsWith('.pdf')){
-      const parsed = await parsePdfFile(f);
-      originalRows = parsed.rows.map(r => normalizeRowPreserveAll(r));
-      headers = parsed.headers.slice();
-      currentRows = originalRows.slice();
-      setStatus(`${originalRows.length} linhas extraídas do PDF — ${headers.length} colunas detectadas.`);
-      fileMeta.textContent = `Arquivo: ${f.name}`;
-      renderTable(currentRows.slice(0, 500));
-    } else {
-      throw new Error('Formato não suportado. Use .xlsx, .xls ou .pdf');
-    }
-  }catch(err){
-    console.error(err);
-    setStatus('Erro ao ler arquivo: ' + (err && err.message ? err.message : err));
-    preview.innerHTML = '<div class="small">Erro ao processar o arquivo. Se for Excel, verifique se não está protegido.</div>';
-  }
-});
-
-/* keep original columns and normalize values a bit */
-function normalizeRowPreserveAll(row){
-  // ensure it's a plain object copy (so we don't modify source)
-  const out = {};
-  for(const k of Object.keys(row || {})) out[k] = row[k];
-  // normalize common keys to string
-  for(const k of Object.keys(out)){
-    if(out[k] === null || out[k] === undefined) out[k] = '';
-    else out[k] = (typeof out[k] === 'string') ? out[k] : String(out[k]);
-  }
-  return out;
-}
-
-/* -----------------------------
-   Filter behavior
-   - Agency: exact numeric match (strip non-digits)
-   - Bank: if input is all digits -> numeric compare; else compare text equality (case-insensitive)
-   - Does NOT mutate originalRows; filtered results are returned and assigned to currentRows
-   ----------------------------- */
-filterBtn.addEventListener('click', ()=>{
-  if(!originalRows || originalRows.length === 0){
-    alert('Carregue um arquivo primeiro.');
-    return;
-  }
-  const aRaw = (agenciaInput.value || '').trim();
-  const bRaw = (bancoInput.value || '').trim();
-  const a = aRaw.replace(/\D/g,''); // numbers only for agency
-  const bIsNumeric = /^\d+$/.test(bRaw);
-  const b = bIsNumeric ? bRaw.replace(/\D/g,'') : bRaw.toLowerCase();
-
-  if(!a && !bRaw){
-    alert('Digite Agência e/ou Banco para filtrar.');
-    return;
-  }
-
-  // determine which keys in rows correspond to Agencia and Banco (if any)
-  const sample = originalRows.find(Boolean) || {};
-  const possibleAgKey = Object.keys(sample).find(k => agenciaKeys.some(pk => k.toLowerCase().includes(pk.toLowerCase())));
-  const possibleBkKey = Object.keys(sample).find(k => bancoKeys.some(pk => k.toLowerCase().includes(pk.toLowerCase())));
-
-  // Filter
-  const filtered = originalRows.filter(r=>{
-    // get agency value
-    const agValRaw = possibleAgKey ? String(r[possibleAgKey] ?? '') : findValue(r, agenciaKeys) ?? '';
-    const agVal = String(agValRaw).replace(/\D/g,''); // only digits
-    let okA = true, okB = true;
-
-    if(a) okA = (agVal === a);
-
-    if(bRaw){
-      let bkValRaw = '';
-      if(possibleBkKey) bkValRaw = String(r[possibleBkKey] ?? '');
-      else bkValRaw = String(findValue(r, bancoKeys) ?? '');
-      const bkDigits = bkValRaw.replace(/\D/g,'');
-      const bkText = bkValRaw.toLowerCase();
-
-      if(bIsNumeric){
-        okB = (bkDigits === b);
-      } else {
-        // text equality or contains? we choose equality of trimmed text OR includes (to accept names)
-        okB = (bkText === b) || (bkText.includes(b));
-      }
-    }
-
-    return okA && okB;
+function parseExcel(file){
+  return new Promise(async(res,rej)=>{
+    try{
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const json=XLSX.utils.sheet_to_json(ws,{defval:''});
+      res(json);
+    }catch(e){rej(e);}
   });
+}
 
-  currentRows = filtered;
+fileInput.addEventListener('change',async ev=>{
+  const f=ev.target.files[0];
+  if(!f)return;
+  setStatus('Lendo arquivo... aguarde.');
+  rows=[];headers=[];
+  try{
+    const url=await window.uploadFileToFirebase(f);
+    setStatus('Arquivo enviado para processamento...');
+    let data=[];
+    if(f.name.endsWith('.pdf')){
+      const text=await extractTextFromPDF(f);
+      data=text.split(/\n{2,}/).map(t=>({Texto:t}));
+      headers=['Texto'];
+    }else{
+      data=await parseExcel(f);
+      headers=Object.keys(data[0]||{});
+    }
+    rows=data;
+    setStatus(`${rows.length} linhas carregadas com sucesso.`);
+    renderTable(rows.slice(0,200));
+  }catch(e){
+    console.error(e);
+    setStatus('Erro ao processar: '+e.message);
+  }
+});
+
+filterBtn.addEventListener('click',()=>{
+  const a=(agenciaInput.value||'').replace(/\D/g,'');
+  const b=(bancoInput.value||'').toLowerCase();
+  if(!a&&!b){alert('Coloque ao menos Agência ou Banco.');return;}
+  const filtered=rows.filter(r=>{
+    const ag=String(r.Agencia||r.agencia||r['AGÊNCIA']||'').replace(/\D/g,'');
+    const ba=String(r.Banco||r.banco||r['BANCO']||'').toLowerCase();
+    let okA=!a||ag===a;
+    let okB=!b||ba===b;
+    return okA&&okB;
+  });
   setStatus(`${filtered.length} registros após filtro.`);
-  renderTable(currentRows);
+  renderTable(filtered);
 });
 
-/* Reset to original (reload originalRows into currentRows and table) */
-resetBtn.addEventListener('click', ()=>{
-  if(!originalRows || originalRows.length===0) return;
-  currentRows = originalRows.slice();
-  setStatus(`${currentRows.length} registros (original).`);
-  renderTable(currentRows.slice(0,500));
-  // clear inputs (optional)
-  // agenciaInput.value = '';
-  // bancoInput.value = '';
-});
-
-/* initialization */
-setStatus('Pronto — escolha um arquivo (.xlsx/.xls/.pdf) e siga as instruções.');
+exportBtn.addEventListener('click',()=>downloadCSV(rows));
+setStatus('Pronto. Escolha o arquivo e siga as instruções.');
 </script>
 </body>
 </html>
