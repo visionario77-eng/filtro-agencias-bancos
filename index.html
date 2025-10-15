@@ -361,30 +361,31 @@ fileInput.addEventListener('change', async (ev)=>{
 });
 
 // filter action
-filterBtn.addEventListener('click', ()=>{
-  if(!rows || rows.length===0){ alert('Primeiro carregue um arquivo.'); return; }
-  const a = (agenciaInput.value||'').toString().trim();
-  const b = (bancoInput.value||'').toString().trim().toLowerCase();
-  if(!a && !b){ alert('Coloque ao menos Agência ou Banco para filtrar.'); return; }
-  const filtered = rows.filter(r=>{
-  let okA = true, okB = true;
-
-  // Filtro exato de agência
-  if(a){
-    const rr = String(r.Agencia || r.agencia || r['Agência'] || r['AGENCIA'] || '').replace(/[^\d]/g,'').trim();
-    okA = rr === a.replace(/[^\d]/g,'').trim();
+filterBtn.addEventListener('click', () => {
+  const a = (agenciaInput.value || '').toString().trim();
+  const b = (bancoInput.value || '').toString().trim().toLowerCase();
+  if (!a && !b) {
+    alert('Coloque ao menos Agência ou Banco para filtrar.');
+    return;
   }
 
-  // Filtro exato de banco
-  if(b){
-    const bankFields = [r.Banco, r.banco, r['Banco Recebe'], r['Banco'], '']
-      .map(x => String(x || '').trim().toLowerCase());
-    okB = bankFields.some(x => x === b.trim().toLowerCase());
-  }
+  const filtered = rows.filter(r => {
+    let okA = true, okB = true;
 
-  return okA && okB;
-});
+    if (a) {
+      const agencia = String(r.Agencia || r.agencia || r['AGENCIA'] || '')
+        .replace(/\D/g, ''); // mantém só números
+      okA = agencia === a.replace(/\D/g, ''); // comparação exata
+    }
+
+    if (b) {
+      const banco = String(r.Banco || r.banco || r['BANCO'] || '').toLowerCase();
+      okB = banco === b; // comparação exata
+    }
+
+    return okA && okB;
   });
+
   setStatus(`${filtered.length} registros após filtro.`);
   renderTable(filtered);
 });
