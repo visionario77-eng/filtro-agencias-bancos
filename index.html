@@ -367,16 +367,23 @@ filterBtn.addEventListener('click', ()=>{
   const b = (bancoInput.value||'').toString().trim().toLowerCase();
   if(!a && !b){ alert('Coloque ao menos Agência ou Banco para filtrar.'); return; }
   const filtered = rows.filter(r=>{
-    let okA = true, okB = true;
-    if(a){
-      const rr = String(r.Agencia||r.agencia||r['Agencia']||r['AGENCIA']||'').replace(/[^\d]/g,'');
-      okA = rr.includes(a.replace(/[^\d]/g,'')) || String(r._orig||'').includes(a);
-    }
-    if(b){
-      const bankFields = [r.Banco, r.banco, r['Banco Recebe'], r['Banco'], ''].map(x=>String(x||'').toLowerCase());
-      okB = bankFields.some(x=> x && x.includes(b) ) || String(r._orig||'').toLowerCase().includes(b);
-    }
-    return okA && okB;
+  let okA = true, okB = true;
+
+  // Filtro exato de agência
+  if(a){
+    const rr = String(r.Agencia || r.agencia || r['Agência'] || r['AGENCIA'] || '').replace(/[^\d]/g,'').trim();
+    okA = rr === a.replace(/[^\d]/g,'').trim();
+  }
+
+  // Filtro exato de banco
+  if(b){
+    const bankFields = [r.Banco, r.banco, r['Banco Recebe'], r['Banco'], '']
+      .map(x => String(x || '').trim().toLowerCase());
+    okB = bankFields.some(x => x === b.trim().toLowerCase());
+  }
+
+  return okA && okB;
+});
   });
   setStatus(`${filtered.length} registros após filtro.`);
   renderTable(filtered);
