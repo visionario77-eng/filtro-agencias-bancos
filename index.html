@@ -11,6 +11,7 @@
   header{display:flex;gap:12px;align-items:center}
   .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;box-shadow:0 10px 30px rgba(79,70,229,0.12)}
   h1{font-size:18px;margin:0}
+  .byline{font-size:13px;color:var(--muted);margin-top:2px}
   .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.06);margin-top:12px}
   label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
   input[type=file]{width:100%}
@@ -24,12 +25,18 @@
   th,td{padding:8px;border-bottom:1px solid #f1f3f8;text-align:left}
   th{background:#f9fbff;font-weight:700}
   .hint{background:#fff7ff;border-left:4px solid #ffd26a;padding:8px;border-radius:8px;margin-top:8px}
-  .footer{font-size:13px;color:var(--muted);margin-top:8px}
+  .footer{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
   @media(max-width:560px){.controls{flex-direction:column} input[type=text]{width:100%}}
 </style>
 
+<!-- XLSX (SheetJS) -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+</script>
 </head>
 <body>
   <div class="wrap">
@@ -37,7 +44,7 @@
       <div class="logo">FB</div>
       <div>
         <h1>Filtro de Agências e Bancos 🌟</h1>
-        <div class="small">Por visionario77 🌟 — tudo processado localmente, sem internet.</div>
+        <div class="byline">Por <b>visionario77 🌟</b> — tudo processado localmente, sem internet.</div>
       </div>
     </header>
 
@@ -56,7 +63,7 @@
         <button id="filterBtn">Filtrar</button>
         <button id="exportBtn" class="ghost">Baixar CSV</button>
       </div>
-      <div class="small" style="margin-top:8px">Pode preencher apenas um campo (Agência ou Banco) ou ambos.</div>
+      <div class="small" style="margin-top:8px">Preencha apenas um campo (Agência ou Banco) ou ambos.</div>
     </div>
 
     <div class="card">
@@ -73,7 +80,7 @@
         <li>Clique em <b>Filtrar</b>.</li>
         <li>Baixe o resultado completo clicando em <b>Baixar CSV</b>.</li>
       </ol>
-      <div class="footer small">© visionario77 🌟 — Privado, rápido e 100% offline.</div>
+      <div class="footer">© visionario77 🌟 — Privado, rápido e 100% offline.</div>
     </div>
   </div>
 
@@ -89,88 +96,136 @@ const status = document.getElementById('status');
 let rows = [];
 let headers = [];
 
-function setStatus(t){ status.textContent = t; }
-function showSmall(m){ preview.innerHTML = '<div class="small">'+m+'</div>'; }
+function setStatus(text){ status.textContent = text; }
+function showSmall(msg){ preview.innerHTML = '<div class="small">'+msg+'</div>'; }
 
 function renderTable(data){
-  if(!data.length){ showSmall('Nenhum registro encontrado.'); return; }
+  if(!data || data.length===0){ showSmall('Nenhum registro.'); return; }
   const keys = headers.length ? headers : Object.keys(data[0]);
-  let html = '<table><thead><tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr></thead><tbody>';
-  for(const r of data){ html += '<tr>'+keys.map(k=>`<td>${r[k]||''}</td>`).join('')+'</tr>'; }
+  let html = '<table><thead><tr>' + keys.map(k=>`<th>${k}</th>`).join('') + '</tr></thead><tbody>';
+  for(const r of data){
+    html += '<tr>' + keys.map(k=>`<td>${(r[k]!==undefined? r[k] : '')}</td>`).join('') + '</tr>';
+  }
   html += '</tbody></table>';
   preview.innerHTML = html;
 }
 
 function downloadCSV(data, filename='resultado.csv'){
+  if(!data || data.length===0){ alert('Nada para baixar.'); return; }
   const keys = headers.length ? headers : Object.keys(data[0]);
-  const csv = [keys.join(',')].concat(data.map(r=>keys.map(k=>`"${(r[k]||'').replace(/"/g,'""')}"`).join(','))).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
+  const csvRows = [keys.join(',')];
+  for(const r of data){
+    const line = keys.map(k => {
+      const v = r[k]===undefined ? '' : String(r[k]).replace(/"/g,'""');
+      return `"${v}"`;
+    }).join(',');
+    csvRows.push(line);
+  }
+  const blob = new Blob([csvRows.join('\n')], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },1000);
 }
 
-async function parseExcel(file){
-  const data = await file.arrayBuffer();
-  const wb = XLSX.read(data, {type:'array'});
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const json = XLSX.utils.sheet_to_json(ws, {defval:''});
-  return json;
+exportBtn.addEventListener('click', ()=>{
+  if(!rows.length){ alert('Nada para exportar.'); return; }
+  downloadCSV(rows, 'filtro_resultado.csv');
+});
+
+// PDF extraction
+async function extractTextFromPDF(file){
+  const arrayBuffer = await file.arrayBuffer();
+  const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+  const pdf = await loadingTask.promise;
+  let fullText = '';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    const strings = content.items.map(i=>i.str);
+    fullText += strings.join(' ') + '\n';
+  }
+  return fullText;
 }
 
-fileInput.addEventListener('change', async e=>{
-  const f = e.target.files[0];
+// Excel parser
+function parseExcel(file){
+  return new Promise(async (resolve, reject) => {
+    try{
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, {defval:''});
+      resolve(json);
+    }catch(e){ reject('Erro ao ler o Excel: ' + e.message); }
+  });
+}
+
+// Normalize Excel to ensure Banco/Agencia exist, preserve all fields
+function normalizeExcelRows(sheetRows){
+  const possibleBanco = ['Banco Recebe','Banco','BANCO','BancoRecebe'];
+  const possibleAg = ['Agencia','Agência','AGENCIA','Ag'];
+  const normalized = [];
+  for(const r of sheetRows){
+    const nr = {...r};
+    // detect Banco
+    const bancoKey = Object.keys(r).find(k=>possibleBanco.some(p=>k.toLowerCase().includes(p.toLowerCase())));
+    nr.Banco = bancoKey ? r[bancoKey] : (r.Banco||'');
+    // detect Agencia
+    const agKey = Object.keys(r).find(k=>possibleAg.some(p=>k.toLowerCase().includes(p.toLowerCase())));
+    nr.Agencia = agKey ? String(r[agKey]).replace(/\D/g,'') : (r.Agencia||'');
+    normalized.push(nr);
+  }
+  return normalized;
+}
+
+// Handle file input
+fileInput.addEventListener('change', async (ev)=>{
+  const f = ev.target.files && ev.target.files[0];
   if(!f) return;
-  setStatus('Lendo arquivo...');
+  setStatus('Lendo arquivo... aguarde');
+  rows = []; headers = [];
   showSmall('Processando...');
   try{
-    const name = f.name.toLowerCase();
-    if(name.endsWith('.xlsx') || name.endsWith('.xls')){
-      rows = await parseExcel(f);
-      headers = Object.keys(rows[0]||{});
-      setStatus(`${rows.length} linhas lidas.`);
+    const name = (f.name||'').toLowerCase();
+    if(name.endsWith('.pdf')){
+      const text = await extractTextFromPDF(f);
+      rows = text.split(/\n+/).map(t=>({Texto:t.trim()})).filter(x=>x.Texto);
+      headers = ['Texto'];
+      setStatus(`${rows.length} linhas lidas do PDF.`);
       renderTable(rows.slice(0,200));
-    }else{
-      throw new Error('Use apenas Excel (.xlsx)');
+    } else if(name.endsWith('.xls') || name.endsWith('.xlsx')){
+      const sheet = await parseExcel(f);
+      rows = normalizeExcelRows(sheet);
+      headers = Object.keys(rows[0]||{});
+      setStatus(`${rows.length} linhas lidas do Excel.`);
+      renderTable(rows.slice(0,200));
+    } else {
+      throw new Error('Tipo de arquivo não suportado.');
     }
   }catch(err){
-    setStatus('Erro: '+err.message);
-    showSmall('Erro ao ler arquivo. Tente outro.');
+    console.error(err);
+    setStatus('Erro: ' + err);
+    showSmall('Erro ao ler o arquivo. Tente outro.');
   }
 });
 
+// Filter
 filterBtn.addEventListener('click', ()=>{
-  const a = agenciaInput.value.replace(/\D/g,'');
-  const b = bancoInput.value.trim().toLowerCase();
-  if(!a && !b){ alert('Preencha Agência ou Banco.'); return; }
+  const a = (agenciaInput.value||'').replace(/\D/g,'');
+  const b = (bancoInput.value||'').trim().toLowerCase();
+  if(!a && !b){ alert('Coloque ao menos Agência ou Banco.'); return; }
 
   const filtered = rows.filter(r=>{
-    let okA=true, okB=true;
-    if(a){
-      const ag = String(r.Agencia||r.agencia||r['AGÊNCIA']||'').replace(/\D/g,'');
-      okA = ag === a;
-    }
-    if(b){
-      const bk = String(r.Banco||r.banco||r['BANCO']||'').toLowerCase();
-      okB = bk.includes(b);
-    }
+    const ag = String(r.Agencia||r.agencia||'').replace(/\D/g,'');
+    const bk = String(r.Banco||r.banco||'').toLowerCase();
+    const okA = !a || ag===a;
+    const okB = !b || bk.includes(b);
     return okA && okB;
   });
 
-  setStatus(`${filtered.length} registros filtrados.`);
+  setStatus(`${filtered.length} registros após filtro.`);
   renderTable(filtered);
-});
-
-exportBtn.addEventListener('click', ()=>{
-  const table = preview.querySelector('table');
-  if(!table){ alert('Filtre antes de baixar.'); return; }
-  const ths = Array.from(table.querySelectorAll('thead th')).map(t=>t.textContent);
-  const trs = Array.from(table.querySelectorAll('tbody tr'));
-  const out = trs.map(tr=>{
-    const tds = Array.from(tr.querySelectorAll('td')).map(td=>td.textContent);
-    const o={}; ths.forEach((h,i)=>o[h]=tds[i]||''); return o;
-  });
-  downloadCSV(out,'filtro_resultado.csv');
+  rows = filtered; // mantém filtrado para exportar
 });
 
 setStatus('Pronto. Escolha o arquivo e siga as instruções acima.');
